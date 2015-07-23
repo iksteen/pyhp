@@ -1,6 +1,10 @@
 from setuptools import setup, Extension
 import subprocess
 
+
+__version__ = '0.5.0'
+
+
 module = Extension(
   '_pyhp',
   ['_pyhp.c'],
@@ -12,6 +16,12 @@ module = Extension(
 
 setup(
   name='pyhp',
+  version=__version__,
   py_modules=['pyhp'],
   ext_modules=[module],
+  description='PHP embedded in Python',
+  author='Ingmar Steen',
+  author_email='iksteen@gmail.com',
+  url='https://github.com/iksteen/pyhp/',
+  download_url='https://github.com/iksteen/pyhp/tarball/v%s' % __version__,
 )
