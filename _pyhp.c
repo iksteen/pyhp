@@ -19,6 +19,9 @@ pyhp_parse_var(PyObject *value) {
     if (value == Py_None) {
         MAKE_STD_ZVAL(var);
         ZVAL_NULL(var);
+    } else if (PyBool_Check(value)) {
+        MAKE_STD_ZVAL(var);
+        ZVAL_BOOL(var, (value == Py_True) ? 1 : 0);
     } else if (PyFloat_Check(value)) {
         MAKE_STD_ZVAL(var);
         ZVAL_DOUBLE(var, PyFloat_AsDouble(value));
