@@ -30,7 +30,7 @@ pyhp_parse_var(PyObject *value) {
         ZVAL_LONG(var, PyInt_AsLong(value));
     } else if (PyString_Check(value)) {
         MAKE_STD_ZVAL(var);
-        ZVAL_STRING(var, PyString_AsString(value), 1);
+        ZVAL_STRINGL(var, PyString_AsString(value), PyString_Size(value), 1);
     } else if (PyDict_Check(value)) {
         MAKE_STD_ZVAL(var);
         array_init(var);
@@ -183,7 +183,7 @@ pyhp_execute(PyObject *self, PyObject *args) {
 }
 
 
-static PyMethodDef SpamMethods[] = {
+static PyMethodDef PyhpMethods[] = {
     {"evaluate",  pyhp_evaluate, METH_VARARGS,
      "Evaluate PHP script."},
     {"execute",  pyhp_execute, METH_VARARGS,
@@ -212,6 +212,6 @@ static int embed_ub_write(const char *str, unsigned int str_length TSRMLS_DC) {
 PyMODINIT_FUNC
 init_pyhp(void)
 {
-    (void) Py_InitModule("_pyhp", SpamMethods);
+    (void) Py_InitModule("_pyhp", PyhpMethods);
     php_embed_module.ub_write = embed_ub_write;
 }
