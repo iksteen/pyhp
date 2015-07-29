@@ -5,6 +5,10 @@
 /* Getting in bed with the devil, try 1. */
 
 
+/* Global reference count on the PHP environment. */
+static int env_refcount = 0;
+
+
 /* Global variables to capture stdout from the embedded PHP interpreter. */
 static char *stdout_buf = NULL;
 static size_t stdout_buf_len;
@@ -117,6 +121,9 @@ pyhp_evaluate_or_execute(int mode, PyObject *self, PyObject *args)
     int zend_ret = 0;
     PyObject *d, *rv;
     zend_file_handle file_handle;
+#ifdef ZTS
+    void ***tsrm_ls;
+#endif
 
     if (!PyArg_ParseTuple(args, "sO!", &script, &PyDict_Type, &d))
         return NULL;
@@ -132,7 +139,11 @@ pyhp_evaluate_or_execute(int mode, PyObject *self, PyObject *args)
     stdout_buf[0] = 0;
     stdout_buf_len = 0;
 
-    PHP_EMBED_START_BLOCK(0, NULL)
+    if (env_refcount++ == 0) {
+        php_embed_init(0, NULL PTSRMLS_CC);
+    }
+
+    zend_first_try {
         /* Set PHP variables. */
         if (pyhp_set_php_vars(d)) {
             if (stdout_buf != NULL)
@@ -150,7 +161,12 @@ pyhp_evaluate_or_execute(int mode, PyObject *self, PyObject *args)
             file_handle.opened_path = NULL;
             zend_ret = php_execute_script( &file_handle TSRMLS_CC );
         }
-    PHP_EMBED_END_BLOCK()
+    } zend_catch {
+    } zend_end_try();
+
+    if (--env_refcount == 0) {
+        php_embed_shutdown(TSRMLS_C);
+    }
 
     /* Create return value from stdout buffer. */
     if (stdout_buf == NULL) {
