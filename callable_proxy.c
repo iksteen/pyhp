@@ -57,20 +57,20 @@ static zend_function_entry callable_proxy_methods[] = {
 
 
 void pyhp_init_callable_proxy(void) {
-  zend_class_entry ce;
-  INIT_CLASS_ENTRY(ce, "PythonCallableProxy", callable_proxy_methods);
-  ce.create_object = create_php_callable_proxy_t;
-  pyhp_ce_callable_proxy = zend_register_internal_class(&ce TSRMLS_CC);
+    zend_class_entry ce;
+    INIT_CLASS_ENTRY(ce, "PythonCallableProxy", callable_proxy_methods);
+    ce.create_object = create_php_callable_proxy_t;
+    pyhp_ce_callable_proxy = zend_register_internal_class(&ce TSRMLS_CC);
 }
 
 
 void pyhp_create_callable_proxy(zval *var, PyObject *callable) {
-  php_callable_proxy_t *proxy;
+    php_callable_proxy_t *proxy;
 
-  Py_XINCREF(callable);
+    Py_XINCREF(callable);
 
-  object_init_ex(var, pyhp_ce_callable_proxy);
+    object_init_ex(var, pyhp_ce_callable_proxy);
 
-  proxy = (php_callable_proxy_t*)zend_object_store_get_object(var TSRMLS_CC);
-  proxy->callable = callable;
+    proxy = (php_callable_proxy_t*)zend_object_store_get_object(var TSRMLS_CC);
+    proxy->callable = callable;
 }
