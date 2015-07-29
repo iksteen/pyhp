@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
+#include "callable_proxy.h"
 
 
 /* Getting in bed with the devil, try 1. */
@@ -82,6 +83,9 @@ pyhp_parse_var(PyObject *value) {
 
             add_next_index_zval(var, var2);
         }
+    } else if (PyCallable_Check(value)) {
+        MAKE_STD_ZVAL(var);
+        pyhp_create_callable_proxy(var, value);
     } else {
         PyErr_SetString(PyExc_ValueError, "Unsupported value type");
         var = NULL;
@@ -141,6 +145,7 @@ pyhp_evaluate_or_execute(int mode, PyObject *self, PyObject *args)
 
     if (env_refcount++ == 0) {
         php_embed_init(0, NULL PTSRMLS_CC);
+        pyhp_init_callable_proxy();
     }
 
     zend_first_try {

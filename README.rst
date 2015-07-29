@@ -37,8 +37,10 @@ Usage
 
 Very little interoperability between python and PHP is provided. The
 only types that can be passed from python to PHP are: None, strings,
-integers, booleans, floats, tuples, lists and dicts. The output of the
-PHP script is captured and returned by the evaluate and execute functions.
+integers, booleans, floats, tuples, lists, dicts and callables. The output
+of the PHP script is captured and returned by the evaluate and execute
+functions. Note that you can't pass any parameters from PHP to python
+callables yet.
 
 What people say
 ---------------

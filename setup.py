@@ -7,7 +7,7 @@ __version__ = '0.5.0'
 
 module = Extension(
   '_pyhp',
-  ['_pyhp.c'],
+  ['_pyhp.c', 'callable_proxy.c'],
   libraries=['php5'],
   extra_compile_args=subprocess.check_output(['php-config', '--includes']).split(' '),
   extra_link_args=subprocess.check_output(['php-config', '--ldflags']).strip().split(' ') + \
