@@ -40,6 +40,12 @@ only types that can be passed from python to PHP are: None, strings,
 integers, booleans, floats, tuples, lists and dicts. The output of the
 PHP script is captured and returned by the evaluate and execute functions.
 
+What people say
+---------------
+
+    tech2: excuse me while I get a hacksaw for my skull and a bottle of isopropanol.
+
+
 License
 -------
 
