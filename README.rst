@@ -47,6 +47,7 @@ What people say
 
     tech2: excuse me while I get a hacksaw for my skull and a bottle of isopropanol.
 
+    Charlie_X: Personally, I'm quite happy to burn you at the stake for that little demon!
 
 License
 -------
