@@ -1,11 +1,11 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
-#include "translate_php_value.h"
+#include "translate_python_value.h"
 #include "python_object_proxy.h"
 
 
 zval *
-pyhp_translate_php_value(PyObject *value) {
+pyhp_translate_python_value(PyObject *value) {
     zval *var = NULL, *var2 = NULL;
     Py_ssize_t pos = 0;
     PyObject *key, *ivalue;
@@ -37,7 +37,7 @@ pyhp_translate_php_value(PyObject *value) {
                 return NULL;
             }
 
-            var2 = pyhp_translate_php_value(ivalue);
+            var2 = pyhp_translate_python_value(ivalue);
             if (var2 == NULL) {
                 zval_ptr_dtor(&var);
                 return NULL;
@@ -50,7 +50,7 @@ pyhp_translate_php_value(PyObject *value) {
 
         for (pos=0; pos < PyTuple_GET_SIZE(value); ++pos) {
             ivalue = PyTuple_GetItem(value, pos);
-            var2 = pyhp_translate_php_value(ivalue);
+            var2 = pyhp_translate_python_value(ivalue);
             if (var2 == NULL) {
                 zval_ptr_dtor(&var);
                 return NULL;
@@ -63,7 +63,7 @@ pyhp_translate_php_value(PyObject *value) {
 
         for (pos=0; pos < PyList_GET_SIZE(value); ++pos) {
             ivalue = PyTuple_GetItem(value, pos);
-            var2 = pyhp_translate_php_value(ivalue);
+            var2 = pyhp_translate_python_value(ivalue);
             if (var2 == NULL) {
                 zval_ptr_dtor(&var);
                 return NULL;

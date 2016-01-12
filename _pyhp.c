@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
 #include "python_object_proxy.h"
-#include "translate_php_value.h"
+#include "translate_python_value.h"
 
 
 /* Getting in bed with the devil, try 1. */
@@ -29,7 +29,7 @@ pyhp_set_php_vars(PyObject *d)
             return -1;
         }
 
-        if ((var = pyhp_translate_php_value(value)) == NULL)
+        if ((var = pyhp_translate_python_value(value)) == NULL)
             return -1;
 
         ZEND_SET_SYMBOL(EG(active_symbol_table), PyString_AS_STRING(key), var);

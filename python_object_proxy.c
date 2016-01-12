@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
-#include "translate_php_value.h"
+#include "translate_python_value.h"
 
 
 static zend_class_entry *pyhp_ce_python_object_proxy;
@@ -58,7 +58,7 @@ static PHP_METHOD(PythonObjectProxy, __invoke) {
     if (proxy->object) {
         if (PyCallable_Check(proxy->object)) {
             PyObject *result = PyObject_CallObject(proxy->object, NULL);
-            zval *ret_val = pyhp_translate_php_value(result);
+            zval *ret_val = pyhp_translate_python_value(result);
             Py_XDECREF(result);
             if (ret_val != NULL)
                 RETURN_ZVAL(ret_val, 0, 0);
@@ -83,7 +83,7 @@ static PHP_METHOD(PythonObjectProxy, __get) {
     if (proxy->object) {
         PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
         if (attr) {
-            zval *ret_val = pyhp_translate_php_value(attr);
+            zval *ret_val = pyhp_translate_python_value(attr);
             Py_DECREF(attr);
             if (ret_val == NULL)
                 return;
@@ -109,7 +109,7 @@ static PHP_METHOD(PythonObjectProxy, __call) {
             PyObject *result = PyObject_CallObject(attr, NULL);
             Py_DECREF(attr);
             if (result) {
-                zval *ret_val = pyhp_translate_php_value(result);
+                zval *ret_val = pyhp_translate_python_value(result);
                 Py_DECREF(result);
                 if (ret_val == NULL)
                     return;
