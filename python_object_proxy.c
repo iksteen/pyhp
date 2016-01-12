@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
 #include "translate_python_value.h"
+#include "translate_php_value.h"
 
 
 static zend_class_entry *pyhp_ce_python_object_proxy;
@@ -53,21 +54,31 @@ static zend_object_value create_pyhp_python_object_proxy_t(zend_class_entry *cla
 
 static PHP_METHOD(PythonObjectProxy, __invoke) {
     pyhp_python_object_proxy_t *proxy;
+    int argc = ZEND_NUM_ARGS(), i;
+    PyObject *arg_values = PyTuple_New(argc);
+    zval **args;
+
+    zend_get_parameters_array_ex(argc, &args);
+    for (i = 0; i < argc; ++i) {
+        PyTuple_SET_ITEM(arg_values, i, pyhp_translate_php_value(args[i]));
+    }
 
     proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
         if (PyCallable_Check(proxy->object)) {
-            PyObject *result = PyObject_CallObject(proxy->object, NULL);
+            PyObject *result = PyObject_CallObject(proxy->object, arg_values);
             zval *ret_val = pyhp_translate_python_value(result);
             Py_XDECREF(result);
             if (ret_val != NULL)
-                RETURN_ZVAL(ret_val, 0, 0);
+                RETVAL_ZVAL(ret_val, 0, 0);
         } else {
             PyObject *object_str = PyObject_Str(proxy->object);
             php_error_docref(NULL TSRMLS_CC, E_NOTICE, "'%s' is not callable", PyString_AsString(object_str));
             Py_XDECREF(object_str);
         }
     }
+
+    Py_DECREF(arg_values);
 }
 
 
@@ -85,9 +96,8 @@ static PHP_METHOD(PythonObjectProxy, __get) {
         if (attr) {
             zval *ret_val = pyhp_translate_python_value(attr);
             Py_DECREF(attr);
-            if (ret_val == NULL)
-                return;
-            RETURN_ZVAL(ret_val, 0, 0);
+            if (ret_val != NULL)
+                RETVAL_ZVAL(ret_val, 0, 0);
         }
     }
 }
@@ -97,31 +107,45 @@ static PHP_METHOD(PythonObjectProxy, __call) {
     pyhp_python_object_proxy_t *proxy;
     char *attr_name;
     int attr_name_length;
-    zval *arguments;
+    zval *args, **arg;
+    HashTable *args_hash;
+    HashPosition args_pointer;
+    PyObject *arg_values;
+    int i = 0;
 
-    if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &attr_name, &attr_name_length, &arguments) == FAILURE) || !attr_name_length)
+    if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &attr_name, &attr_name_length, &args) == FAILURE) || !attr_name_length)
         return;
+
+    args_hash = Z_ARRVAL_P(args);
+    arg_values = PyTuple_New(zend_hash_num_elements(args_hash));
+    for (zend_hash_internal_pointer_reset_ex(args_hash, &args_pointer);
+         zend_hash_get_current_data_ex(args_hash, (void**)&arg, &args_pointer) == SUCCESS;
+         zend_hash_move_forward_ex(args_hash, &args_pointer)) {
+        PyTuple_SET_ITEM(arg_values, i++, pyhp_translate_php_value(*arg));
+    }
 
     proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
         PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
+
         if (PyCallable_Check(attr)) {
-            PyObject *result = PyObject_CallObject(attr, NULL);
-            Py_DECREF(attr);
+            PyObject *result = PyObject_CallObject(attr, arg_values);
             if (result) {
                 zval *ret_val = pyhp_translate_python_value(result);
                 Py_DECREF(result);
-                if (ret_val == NULL)
-                    return;
-                RETURN_ZVAL(ret_val, 0, 0);
+                if (ret_val != NULL)
+                    RETVAL_ZVAL(ret_val, 0, 0);
             }
         } else {
             PyObject *attr_str = PyObject_Str(attr);
             php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Attribute %s ('%s') is not callable", attr_name, PyString_AsString(attr_str));
             Py_XDECREF(attr_str);
-            Py_XDECREF(attr);
         }
+
+        Py_XDECREF(attr);
     }
+
+    Py_DECREF(arg_values);
 }
 
 
