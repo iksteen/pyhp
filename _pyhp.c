@@ -1,6 +1,6 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
-#include "callable_proxy.h"
+#include "python_object_proxy.h"
 #include "translate_php_value.h"
 
 
@@ -66,7 +66,7 @@ pyhp_evaluate_or_execute(int mode, PyObject *self, PyObject *args)
 
     if (env_refcount++ == 0) {
         php_embed_init(0, NULL PTSRMLS_CC);
-        pyhp_init_callable_proxy();
+        pyhp_init_python_object_proxy();
     }
 
     zend_first_try {

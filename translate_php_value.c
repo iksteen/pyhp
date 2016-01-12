@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
 #include "translate_php_value.h"
-#include "callable_proxy.h"
+#include "python_object_proxy.h"
 
 
 zval *
@@ -74,7 +74,7 @@ pyhp_translate_php_value(PyObject *value) {
         }
     } else if (PyCallable_Check(value)) {
         MAKE_STD_ZVAL(var);
-        pyhp_create_callable_proxy(var, value);
+        pyhp_create_python_object_proxy(var, value);
     } else {
         PyErr_SetString(PyExc_ValueError, "Unsupported value type");
         var = NULL;
