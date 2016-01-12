@@ -19,22 +19,22 @@ ZEND_END_ARG_INFO()
 typedef struct {
     zend_object std;
     PyObject *object;
-} php_python_object_proxy_t;
+} pyhp_python_object_proxy_t;
 
 
 static void free_python_object_proxy(void *object TSRMLS_DC) {
-    php_python_object_proxy_t *proxy = (php_python_object_proxy_t*)object;
+    pyhp_python_object_proxy_t *proxy = (pyhp_python_object_proxy_t*)object;
     Py_XDECREF(proxy->object);
     proxy->object = NULL;
 }
 
 
-static zend_object_value create_php_python_object_proxy_t(zend_class_entry *class_type TSRMLS_DC) {
+static zend_object_value create_pyhp_python_object_proxy_t(zend_class_entry *class_type TSRMLS_DC) {
     zend_object_value retval;
-    php_python_object_proxy_t *intern;
+    pyhp_python_object_proxy_t *intern;
 
-    intern = (php_python_object_proxy_t*)emalloc(sizeof(php_python_object_proxy_t));
-    memset(intern, 0, sizeof(php_python_object_proxy_t));
+    intern = (pyhp_python_object_proxy_t*)emalloc(sizeof(pyhp_python_object_proxy_t));
+    memset(intern, 0, sizeof(pyhp_python_object_proxy_t));
 
     zend_object_std_init(&intern->std, class_type TSRMLS_CC);
     object_properties_init((zend_object*) &(intern->std), class_type);
@@ -52,9 +52,9 @@ static zend_object_value create_php_python_object_proxy_t(zend_class_entry *clas
 
 
 static PHP_METHOD(PythonObjectProxy, __invoke) {
-    php_python_object_proxy_t *proxy;
+    pyhp_python_object_proxy_t *proxy;
 
-    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
+    proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
         if (PyCallable_Check(proxy->object)) {
             PyObject *result = PyObject_CallObject(proxy->object, NULL);
@@ -72,14 +72,14 @@ static PHP_METHOD(PythonObjectProxy, __invoke) {
 
 
 static PHP_METHOD(PythonObjectProxy, __get) {
-    php_python_object_proxy_t *proxy;
+    pyhp_python_object_proxy_t *proxy;
     char *attr_name;
     int attr_name_length;
 
     if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &attr_name, &attr_name_length) == FAILURE) || !attr_name_length)
         return;
 
-    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
+    proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
         PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
         if (attr) {
@@ -94,7 +94,7 @@ static PHP_METHOD(PythonObjectProxy, __get) {
 
 
 static PHP_METHOD(PythonObjectProxy, __call) {
-    php_python_object_proxy_t *proxy;
+    pyhp_python_object_proxy_t *proxy;
     char *attr_name;
     int attr_name_length;
     zval *arguments;
@@ -102,7 +102,7 @@ static PHP_METHOD(PythonObjectProxy, __call) {
     if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &attr_name, &attr_name_length, &arguments) == FAILURE) || !attr_name_length)
         return;
 
-    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
+    proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
         PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
         if (PyCallable_Check(attr)) {
@@ -136,18 +136,18 @@ static zend_function_entry python_object_proxy_methods[] = {
 void pyhp_init_python_object_proxy(void) {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "PythonObjectProxy", python_object_proxy_methods);
-    ce.create_object = create_php_python_object_proxy_t;
+    ce.create_object = create_pyhp_python_object_proxy_t;
     pyhp_ce_python_object_proxy = zend_register_internal_class(&ce TSRMLS_CC);
 }
 
 
 void pyhp_create_python_object_proxy(zval *var, PyObject *object) {
-    php_python_object_proxy_t *proxy;
+    pyhp_python_object_proxy_t *proxy;
 
     Py_XINCREF(object);
 
     object_init_ex(var, pyhp_ce_python_object_proxy);
 
-    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(var TSRMLS_CC);
+    proxy = (pyhp_python_object_proxy_t*)zend_object_store_get_object(var TSRMLS_CC);
     proxy->object = object;
 }
