@@ -46,11 +46,17 @@ static PHP_METHOD(PythonObjectProxy, __invoke) {
 
     proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->object) {
-        PyObject *result = PyObject_CallObject(proxy->object, NULL);
-        zval *ret_val = pyhp_translate_php_value(result);
-        Py_XDECREF(result);
-        if (ret_val != NULL)
-            RETURN_ZVAL(ret_val, 0, 0);
+        if (PyCallable_Check(proxy->object)) {
+            PyObject *result = PyObject_CallObject(proxy->object, NULL);
+            zval *ret_val = pyhp_translate_php_value(result);
+            Py_XDECREF(result);
+            if (ret_val != NULL)
+                RETURN_ZVAL(ret_val, 0, 0);
+        } else {
+            PyObject *object_str = PyObject_Str(proxy->object);
+            php_error_docref(NULL TSRMLS_CC, E_NOTICE, "'%s' is not callable", PyString_AsString(object_str));
+            Py_XDECREF(object_str);
+        }
     }
 }
 

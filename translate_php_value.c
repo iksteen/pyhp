@@ -10,6 +10,11 @@ pyhp_translate_php_value(PyObject *value) {
     Py_ssize_t pos = 0;
     PyObject *key, *ivalue;
 
+    if (value == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Cannot translate NULL value");
+        return NULL;
+    }
+
     MAKE_STD_ZVAL(var);
 
     if (value == Py_None) {
@@ -66,12 +71,8 @@ pyhp_translate_php_value(PyObject *value) {
 
             add_next_index_zval(var, var2);
         }
-    } else if (PyCallable_Check(value)) {
-        pyhp_create_python_object_proxy(var, value);
     } else {
-        zval_ptr_dtor(&var);
-        PyErr_SetString(PyExc_ValueError, "Unsupported value type");
-        var = NULL;
+        pyhp_create_python_object_proxy(var, value);
     }
 
     return var;
