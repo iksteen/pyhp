@@ -1,5 +1,6 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
+#include "translate_php_value.h"
 
 
 static zend_class_entry *pyhp_ce_callable_proxy;
@@ -45,7 +46,11 @@ static PHP_METHOD(PythonCallableProxy, __invoke) {
 
     proxy = (php_callable_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
     if (proxy->callable) {
-        PyObject_CallObject(proxy->callable, NULL);
+        PyObject *result = PyObject_CallObject(proxy->callable, NULL);
+        zval *ret_val = pyhp_translate_php_value(result);
+        Py_XDECREF(result);
+        if (ret_val != NULL)
+            RETURN_ZVAL(ret_val, 0, 0);
     }
 }
 
