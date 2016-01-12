@@ -6,6 +6,16 @@
 static zend_class_entry *pyhp_ce_python_object_proxy;
 
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo___get, 0, ZEND_RETURN_VALUE, 1)
+    ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo___call, 0, ZEND_RETURN_VALUE, 2)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_ARRAY_INFO(0, arguments, 0)
+ZEND_END_ARG_INFO()
+
+
 typedef struct {
     zend_object std;
     PyObject *object;
@@ -61,8 +71,64 @@ static PHP_METHOD(PythonObjectProxy, __invoke) {
 }
 
 
+static PHP_METHOD(PythonObjectProxy, __get) {
+    php_python_object_proxy_t *proxy;
+    char *attr_name;
+    int attr_name_length;
+
+    if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &attr_name, &attr_name_length) == FAILURE) || !attr_name_length)
+        return;
+
+    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
+    if (proxy->object) {
+        PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
+        if (attr) {
+            zval *ret_val = pyhp_translate_php_value(attr);
+            Py_DECREF(attr);
+            if (ret_val == NULL)
+                return;
+            RETURN_ZVAL(ret_val, 0, 0);
+        }
+    }
+}
+
+
+static PHP_METHOD(PythonObjectProxy, __call) {
+    php_python_object_proxy_t *proxy;
+    char *attr_name;
+    int attr_name_length;
+    zval *arguments;
+
+    if ((zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa", &attr_name, &attr_name_length, &arguments) == FAILURE) || !attr_name_length)
+        return;
+
+    proxy = (php_python_object_proxy_t*)zend_object_store_get_object(getThis() TSRMLS_CC);
+    if (proxy->object) {
+        PyObject *attr = PyObject_GetAttrString(proxy->object, attr_name);
+        if (PyCallable_Check(attr)) {
+            PyObject *result = PyObject_CallObject(attr, NULL);
+            Py_DECREF(attr);
+            if (result) {
+                zval *ret_val = pyhp_translate_php_value(result);
+                Py_DECREF(result);
+                if (ret_val == NULL)
+                    return;
+                RETURN_ZVAL(ret_val, 0, 0);
+            }
+        } else {
+            PyObject *attr_str = PyObject_Str(attr);
+            php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Attribute %s ('%s') is not callable", attr_name, PyString_AsString(attr_str));
+            Py_XDECREF(attr_str);
+            Py_XDECREF(attr);
+        }
+    }
+}
+
+
 static zend_function_entry python_object_proxy_methods[] = {
     PHP_ME(PythonObjectProxy, __invoke, NULL, ZEND_ACC_PUBLIC)
+    PHP_ME(PythonObjectProxy, __get, arginfo___get, ZEND_ACC_PUBLIC)
+    PHP_ME(PythonObjectProxy, __call, arginfo___call, ZEND_ACC_PUBLIC)
     {NULL, NULL, NULL}
 };
 
