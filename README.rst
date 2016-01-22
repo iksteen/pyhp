@@ -35,12 +35,19 @@ Usage
     'bar'
     >>> pyhp.execute('foo.php', {'foo': 'bar'})
 
-Very little interoperability between python and PHP is provided. The
-only types that can be passed from python to PHP are: None, strings,
-integers, booleans, floats, tuples, lists, dicts and callables. The output
-of the PHP script is captured and returned by the evaluate and execute
-functions. Note that you can't pass any parameters from PHP to python
-callables yet.
+Pretty much any object can be passed from python to PHP. None, strings,
+integers, booleans, tuples, lists and dicts are first translated to
+their respective PHP type. Objects and callables are passed by a proxy
+wrapper which allows access to properties and function / method
+invocation.
+
+When calling a python function from PHP code you can pass NULL, integers,
+doubles, booleans, strings and arrays and they will be translated to their
+respective python types. A heuristic is applied to PHP arrays to determine
+if the keys are sequential integers. If so, a list will be passed to the
+python callable. Otherwise a dict is passed. Passing PHP objects from PHP
+to a python callable is not supported. You can however pass proxied
+python objects back to python code.
 
 What people say
 ---------------
@@ -48,6 +55,8 @@ What people say
     tech2: excuse me while I get a hacksaw for my skull and a bottle of isopropanol.
 
     Charlie_X: Personally, I'm quite happy to burn you at the stake for that little demon!
+
+    anonymous: Hurrah! An extra warm spot in hell for you. You've earned it.
 
 License
 -------
