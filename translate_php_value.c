@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <sapi/embed/php_embed.h>
 #include "translate_php_value.h"
+#include "python_object_proxy.h"
 
 
 PyObject *pyhp_translate_php_value(zval *value) {
@@ -69,6 +70,13 @@ PyObject *pyhp_translate_php_value(zval *value) {
             }
 
             return ret_val_dict;
+        }
+        case IS_OBJECT: {
+            if (pyhp_is_python_object_proxy(value)) {
+                PyObject *object = pyhp_get_proxied_python_object(value);
+                Py_XINCREF(object);
+                return object;
+            }
         }
         default:
             fprintf(stderr, "Unsupported type (%s)\n", zend_zval_type_name(value));
