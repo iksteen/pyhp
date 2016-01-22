@@ -16,7 +16,7 @@ PyObject *pyhp_translate_php_value(zval *value) {
         case IS_STRING:
             return PyString_FromStringAndSize(Z_STRVAL_P(value), Z_STRLEN_P(value));
         default:
-            printf("Unsupported type (%s)\n", zend_zval_type_name(value));
+            fprintf(stderr, "Unsupported type (%s)\n", zend_zval_type_name(value));
     }
 
     Py_INCREF(Py_None);
