@@ -58,6 +58,8 @@ What people say
 
     anonymous: Hurrah! An extra warm spot in hell for you. You've earned it.
 
+    bertjwregeer: Someone for the love of everything please explain why https://github.com/iksteen/pyhp exists. Embedding PHP in Python!!!
+
 License
 -------
 
